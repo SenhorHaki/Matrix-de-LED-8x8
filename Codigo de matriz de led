@@ -1,0 +1,614 @@
+/*
+  #######################################################
+  # Arquivo: Matriz_DE_Led_Arduinko.ino #               #
+  # Processador: Arduino UNO, MEGA ou Teensy++ 2.0      #
+  # Linguagem: Fiação / C / Processamento / Arduino IDE #
+  #                                                     #
+  # Objetivos: Brincando com bit-map em uma MATRIZ  8x8 #
+  #                                                     #
+  # Comportamento: Matriz de  leed 8x8, via bit mapeado #
+  #                                                     #
+  # Autor: Darlei Napoleão                              #
+  # Data: 19/03/2014                                    #
+  # local: João Pessoa, Brasil                          #  
+  #######################################################
+        Este projeto contém código de domínio público.
+           OBS: é permitido sem aviso prévio.
+*/
+int speed = 5; //tempo de atraso em milisegundos
+int pauseDelay = 1;    //número de milisegundos para mostrar cada linha
+
+//definição os pinos de entrada
+int rowA[] = {13,8,17,10,5,16,4,14}; //Matriz-1,define quais são os pinos por linha no Arduino (linhas acionada com HIGH)
+int colA[] = {9,3,2,12,15,11,7,6};   //Matriz que define quais são os pinos por coluna no Arduino(linhas acionada com LOW)                                   
+
+/*matriz usada para armazenar um mapa de bits do display 
+Caso deseje algum outro padrão de rolagem mude os dados desta matriz)*/
+byte data[] = {0,0,0,0,0,0,0,0};    
+
+//inicialização do sistema Arduino
+void setup()
+{ 
+  Serial.begin(9600);         //inicializa a porta serial para depuração
+  for(int i = 0; i <8; i++){  //configura os pinos usados para controle da matriz como saída
+    pinMode(rowA[i], OUTPUT);
+    pinMode(colA[i], OUTPUT);
+  }
+}
+//loop principal
+void loop()
+{
+ //Tipo#1 - padrão de teste
+  test();  
+ /*
+  Tipo#2 - imagem estática.Define um mapa de bits a ser mostrado
+  data[0] = B10101010; //row 1s bit mask (1 LED is on 0 LED is off)
+  data[1] = B01010101; //row 1s bit mask (1 LED is on 0 LED is off)
+  data[2] = B10101010; //row 1s bit mask (1 LED is on 0 LED is off)
+  data[3] = B01010101; //row 1s bit mask (1 LED is on 0 LED is off)
+  data[4] = B10101010; //row 1s bit mask (1 LED is on 0 LED is off)
+  data[5] = B01010101; //row 1s bit mask (1 LED is on 0 LED is off)
+  data[6] = B10101010; //row 1s bit mask (1 LED is on 0 LED is off)  
+  data[7] = B01010101; //row 1s bit mask (1 LED is on 0 LED is off)  
+  showSprite(speed);
+ */
+}
+//uma matriz contendo a potência de 2 usada como máscara de Bits para calcular o que mostrar
+const int powers[] = {1,2,4,8,16,32,64,128};
+//roda um padrão onde cada LED é aceso um após o outro
+void test(){
+  for(int i = 0; i < 8; i++){
+    for(int ii = 0; ii< 8; ii++){
+    data[i] = data[i]+ powers[ii];   //vai através de cada linha de luzes,acendendo cada coluna uma depois da outra                                     
+    showSprite(speed); //mostra padrão atual
+    }
+  }  
+  for(int i = 0; i < 8; i++){
+    for(int ii = 0; ii< 8; ii++){
+    data[i] = data[i] - powers[ii];   //vai através de cada linha de luzes,apagando cada coluna uma após a outra
+    showSprite(speed); 
+    }
+  }  
+}
+//mostra um padrão no display
+void showSprite(int speed2){
+    for(int iii = 0; iii < speed2; iii++){  //mostra o frame corrente speed2 vezes
+        for(int column = 0; column < 8; column++){ //iteração de colunas
+            for(int i = 0; i < 8; i++){                          
+            digitalWrite(rowA[i], LOW);   //apaga todos os pinos das linhas
+   }
+   for(int i = 0; i < 8; i++){ //configura apenas um pino
+    if(i == column){     digitalWrite(colA[i], LOW);}  //habilita a linha corrente somente
+     else{                digitalWrite(colA[i], HIGH); }//desliga o restante das linhas
+   }
+   for(int row = 0; row < 8; row++){ //iteração de cada pixel na coluna corrente
+    int bit = (data[column] >> row) & 1;
+    if(bit == 1){ 
+       digitalWrite(rowA[row], HIGH);   //se o bit na matriz de dados, se setado, ativa o LED
+    }
+   }
+   delay(pauseDelay);    //deixa a coluna ligada por pauseDelay em microsecondos 
+  } 
+ }
+}
+//FIM DA COMPILAÇÃO
+/*MATRIX SCROLL:-
+ * Código exemplo para uma matriz de LEDs 8 x 8
+ * Ajustar a velocidade, mude a variável speed.
+ * A mensagem é armazenada em requestString[] */
+int speed = 20; //número de vezes que o frame será repetido
+int pauseDelay = 500;  //microsecondos para deixar cada linha acesa antes de mover para o próximo
+
+char requestString[] = " DARLEI % ";  //Altere o conteudo e mude a mensagem 
+                                        
+//Variáveis usadas para rolagem ambas começam em 0
+int index = 0;  //este é o caracter corrente na string sendo mostrada
+int offset = 0; //esta são quantas colunas de offset
+
+//definição de pinos
+int rowA[] = {13,8,17,10,5,16,4,14}; //matriz que define quais são os pinos de cada linha no Arduino (linhas são anodo comum (acionada com HIGH))
+int colA[] = {9,3,2,12,15,11,7,6};  //matris que define quais são os pinos de cada coluna no Arduino (colunas são catodo comum (acionada com LOW))
+//constantes definindo cada posição de caracter numa matriz de inteiros
+//Letras
+const int A = 0;  const int B = 1;  const int C = 2;  const int D = 3;  const int E = 4;
+const int F = 5;  const int G = 6;  const int H = 7;  const int I = 8;  const int J = 9;  
+const int K = 10; const int L =11;  const int M = 12; const int N = 13; const int O = 14; 
+const int P = 15; const int Q =16;  const int R = 17; const int S = 18; const int T = 19; 
+const int U = 20; const int V =21;  const int W = 22; const int X = 23; const int Y = 24; 
+const int Z = 25;
+//Caracteres de pontuação
+const int COL =26; const int DASH = 27; const int BRA2 = 28; const int  _ = 29; const int LINE = 34;
+const int DOT =36;
+
+//Caracteres emojis
+const int  FULL =30; const int CHECK = 31; const int B2 = 32; const int TEMP = 33; 
+const int SMILE =35; const int COLDOT = 36;
+
+//Matriz usada para armazenar um mapa de bits a ser mostrado (modifique esta variável)
+byte data[] = {0,0,0,0,0,0,0,0};       
+
+//O alfabeto,cada caracter é um mapa de bit de 8 x 7 onde 1 é ligado e 0 é desligado
+const int _A[] = {B0001000,
+                  B0010100,
+                  B0100010,
+                  B1000001,
+                  B1111111,
+                  B1000001,
+                  B1000001,
+                  B0000000};
+
+const int _B[] = {B1111110,
+                  B0100001,
+                  B0100001,
+                  B0111110,
+                  B0100001,
+                  B0100001,
+                  B1111110,
+                  B0000000};
+
+const int _C[] = {B0011111,
+                  B0100000,
+                  B1000000,
+                  B1000000,
+                  B1000000,
+                  B0100000,
+                  B0011111,
+                  B0000000};
+
+const int _D[] = {B1111100,
+                  B0100010,
+                  B0100001,
+                  B0100001,
+                  B0100001,
+                  B0100010,
+                  B1111100,
+                  B0000000};
+
+const int _E[] = {B1111111,
+                  B1000000,
+                  B1000000,
+                  B1111100,
+                  B1000000,
+                  B1000000,
+                  B1111111,
+                  B0000000};
+
+const int _F[] = {B1111111,
+                  B1000000,
+                  B1000000,
+                  B1111100,
+                  B1000000,
+                  B1000000,
+                  B1000000,
+                  B0000000};
+
+const int _G[] = {B0011111,
+                  B0100000,
+                  B1000000,
+                  B1001111,
+                  B1000001,
+                  B0100001,
+                  B0011111,
+                  B0000000};
+
+const int _H[] = {B1000001,
+                  B1000001,
+                  B1000001,
+                  B1111111,
+                  B1000001,
+                  B1000001,
+                  B1000001,
+                  B0000000};
+
+const int _I[] = {B1111111,
+                  B0001000,
+                  B0001000,
+                  B0001000,
+                  B0001000,
+                  B0001000,
+                  B1111111,
+                  B0000000};
+
+const int _J[] = {B0001111,
+                  B0000001,
+                  B0000001,
+                  B0000001,
+                  B0000001,
+                  B1000001,
+                  B0111110,
+                  B0000000};
+
+const int _K[] = {B1000011,
+                  B1000100,
+                  B1001000,
+                  B1110000,
+                  B1001000,
+                  B1000100,
+                  B1000011,
+                  B0000000};
+
+const int _L[] = {B1000000,
+                  B1000000,
+                  B1000000,
+                  B1000000,
+                  B1000000,
+                  B1000000,
+                  B1111111,
+                  B0000000};
+
+const int _M[] = {B1110110,
+                  B1001001,
+                  B1001001,
+                  B1001001,
+                  B1001001,
+                  B1001001,
+                  B1001001,
+                  B0000000};
+
+const int _N[] = {B1000001,
+                  B1100001,
+                  B1010001,
+                  B1001001,
+                  B1000101,
+                  B1000011,
+                  B1000001,
+                  B0000000};
+
+const int _O[] = {B0011100,
+                  B0100010,
+                  B1000001,
+                  B1001001,
+                  B1000001,
+                  B0100010,
+                  B0011100,
+                  B0000000};
+
+const int _P[] = {B1111110,
+                  B0100001,
+                  B0100001,
+                  B0111110,
+                  B0100000,
+                  B0100000,
+                  B0100000,
+                  B0000000};
+
+const int _Q[] = {B0011100,
+                  B0100010,
+                  B1000001,
+                  B1000001,
+                  B1000101,
+                  B0100010,
+                  B0011101,
+                  B0000000};
+
+const int _R[] = {B1111110,
+                  B0100001,
+                  B0100001,
+                  B0101110,
+                  B0100100,
+                  B0100010,
+                  B0100001,
+                  B0000000};
+
+const int _S[] = {B0111111,
+                  B1000000,
+                  B1000000,
+                  B0111110,
+                  B0000001,
+                  B0000001,
+                  B1111110,
+                  B0000000};
+
+const int _T[] = {B1111111,
+                  B0001000,
+                  B0001000,
+                  B0001000,
+                  B0001000,
+                  B0001000,
+                  B0001000,
+                  B0000000};
+
+const int _U[] = {B1000001,
+                  B1000001,
+                  B1000001,
+                  B1000001,
+                  B1000001,
+                  B1000001,
+                  B0111110,
+                  B0000000};
+
+const int _V[] = {B1000001,
+                  B1000001,
+                  B1000001,
+                  B1000001,
+                  B0100010,
+                  B0010100,
+                  B0001000,
+                  B0000000};
+                  
+const int _W[] = {B1000001,
+                  B1001001,
+                  B1001001,
+                  B1001001,
+                  B1001001,
+                  B1001001,
+                  B0110110,
+                  B0000000};
+
+const int _X[] = {B1000001,
+                  B0100010,
+                  B0010100,
+                  B0001000,
+                  B0010100,
+                  B0100010,
+                  B1000001,
+                  B0000000};
+
+const int _Y[] = {B1000001,
+                  B0100010,
+                  B0010100,
+                  B0001000,
+                  B0001000,
+                  B0001000,
+                  B0001000,
+                  B0000000};
+
+const int _Z[] = {B1111111,
+                  B0000010,
+                  B0000100,
+                  B0111110,
+                  B0010000,
+                  B0100000,
+                  B1111111,
+                  B0000000};
+
+const int _COL[] = {B0000000,
+                    B0011000,
+                    B0011000,
+                    B0000000,
+                    B0011000,
+                    B0011000,
+                    B0000000,
+                    B0000000};
+
+const int _DASH[] = {B0000000,
+                     B0000000,
+                     B0000000,
+                     B0111110,
+                     B0000000,
+                     B0000000,
+                     B0000000,
+                     B0000000};
+
+const int _BRA2[] = {B0010000,
+                     B0001000,
+                     B0000100,
+                     B0000100,
+                     B0001000,
+                     B0010000,
+                     B0000000,
+                     B0000000};                  
+
+const int __[] = {B0000000,
+                  B0000000,
+                  B0000000,
+                  B0000000,
+                  B0000000,
+                  B0000000,
+                  B0000000,
+                  B0000000};
+
+const int _FULL[] = {B1111111,
+                     B1111111,
+                     B1111111,
+                     B1111111,
+                     B1111111,
+                     B1111111,
+                     B1111111,
+                     B0000000};                  
+
+const int _CHECK[] = {B1010101,
+                      B0101010,
+                      B1010101,
+                      B0101010,
+                      B1010101,
+                      B0101010,
+                      B1010101,
+                      B0000000};
+                  
+const int _B2[] = {B0111110,
+                   B0000001,
+                   B0000001,
+                   B0001111,
+                   B0000001,
+                   B1000001,
+                   B0111110,
+                   B0000000};
+
+const int _TEMP[] = {B0000011,
+                     B0011111,
+                     B0111111,
+                     B1111110,
+                     B1111111,
+                     B0011111,
+                     B0000011,
+                     B0000000};
+
+const int _LINE[] = {B0000001,
+                     B0000001,
+                     B0000001,
+                     B0000001,
+                     B0000001,
+                     B0000001,
+                     B0000001,
+                     B0000000};                     
+                 
+const int _SMILE[] = {B000000,
+                      B1100100,
+                      B1100010,
+                      B0011001,
+                      B1100010,
+                      B1100100,
+                      B0000000,
+                      B0000000};                     
+                  
+
+const int _DOT[] = {B0000000,
+                    B0000000,
+                    B0000000,
+                    B0000000,
+                    B1100000,
+                    B1100000,
+                    B0000000,
+                    B0000000};                     
+                  
+const int _COLDOT[] = {B0000000,
+                       B0110000,
+                       B0110000,
+                       B0000000,
+                       B0110011,
+                       B0110011,
+                       B0000000,
+                       B0000000};                  
+
+/*carrega o mapa de bits de caracter numa matriz cada posição de caracter corresponde ao seu indice previamente definido
+//isto é _A (mapa de bits do "a") se o indice 0 é do "A", então letters[A] retornará o mapa de bits de "A")*/
+const int* letters[] = {_A,_B,_C,_D,_E,_F,_G,_H,_I,_J,_K,_L,_M,_N,_O,_P,_Q,_R,_S,_T,_U,_V,_W,_X,_Y,_Z,_COL,_DASH,_BRA2,__, _FULL, _CHECK, _B2, _TEMP, _LINE, _SMILE, _DOT, _COLDOT};
+
+//definição do Arduino roda somente na inicialização
+void setup()
+{ 
+  for(int i = 0; i <8; i++){  //configura os 16 pinos usados para controlar 
+                              // a matriz como pinos de saída
+    pinMode(rowA[i], OUTPUT);
+    pinMode(colA[i], OUTPUT);
+  }
+}
+//loop do programa principal   
+void loop()
+{
+ atualizaMatriz(); //atualiza a matrix 
+}
+
+void atualizaMatriz(){
+  loadSprite(); //carrega mapa de bits
+  showSprite(speed); //mostra o mapa com a velocidade programada
+}
+//uma matriz contendo a potência de 2 usada como máscara de 
+//bits para calcular o que mostrar
+const int powers[] = {1,2,4,8,16,32,64,128};
+
+//carrega o estado atual do quadro a ser mostrado na matriz data[]
+void loadSprite(){
+  int currentChar = getChar(requestString[index]); //lê caracter da matriz
+  int nextChar = getChar(requestString[index+1]); //lê o próximo
+  
+  for(int row=0; row < 8; row++){                    //iteração para cada linha
+    data[row] = 0;                                   //reseta a linha de trabalho
+    for(int column=0; column < 8; column++){         //iteração para cada coluna
+     //carrega o caractere atual, compensado por pixels de deslocamento 
+     data[row] = data[row] + ((powers[column] & (letters[currentChar][row] << offset)));   
+     //carrega o próximo caracte compensado por pixels de deslocamento
+     data[row] = data[row] + (powers[column] & (letters[nextChar][row] >> (8-offset) ));   
+    }
+  }
+  offset++; //incrementa o offset de uma linha
+  //se offset é de 8, carregar o par de caracteres a seguir na proxima vez 
+  if(offset==8){offset = 0; index++; if(index==sizeof(requestString)-2){index=0;}}         
+}
+
+void showSprite(int speed2){
+ for(int iii = 0; iii < speed2; iii++){                 //mostra o frame corrente de speed2
+  for(int column = 0; column < 8; column++){            //iteração de cada coluna
+   for(int i = 0; i < 8; i++){                          
+       digitalWrite(rowA[i], LOW);                      //desliga todos os pinos de linhas
+   }
+   for(int i = 0; i < 8; i++){ //configura somente um pino
+     if(i == column){     digitalWrite(colA[i], LOW);}  //liga a linha corrente
+     else{                digitalWrite(colA[i], HIGH); }//liga o restante das linhas
+   }
+
+   for(int row = 0; row < 8; row++){ //iteração através de cada pixel da coluna corrente
+    int bit = (data[column] >> row) & 1;
+    if(bit == 1){ 
+      //se o bit na matriz de dados está definido, acende o LED 
+      digitalWrite(rowA[row], HIGH);                   
+    }
+
+   }
+   delayMicroseconds(pauseDelay);                       
+  } 
+ }
+}
+//retorna o indice de um dado caractere, para a conversão de uma string e, para a pesquisa na mtriz de mapa de bit de caracteres
+int getChar(char charachter){
+ int returnValue = Z;
+ switch(charachter){
+  case 'A': returnValue = A; break;
+  case 'a': returnValue = A; break;
+  case 'B': returnValue = B; break;
+  case 'b': returnValue = B; break;
+  case 'C': returnValue = C; break;
+  case 'c': returnValue = C; break;
+  case 'D': returnValue = D; break;
+  case 'd': returnValue = D; break;
+  case 'E': returnValue = E; break;
+  case 'e': returnValue = E; break;
+  case 'F': returnValue = F; break;
+  case 'f': returnValue = F; break;
+  case 'G': returnValue = G; break;
+  case 'g': returnValue = G; break;
+  case 'H': returnValue = H; break;
+  case 'h': returnValue = H; break;
+  case 'I': returnValue = I; break;
+  case 'i': returnValue = I; break;
+  case 'J': returnValue = J; break;
+  case 'j': returnValue = J; break;
+  case 'K': returnValue = K; break;
+  case 'k': returnValue = K; break;
+  case 'L': returnValue = L; break;
+  case 'l': returnValue = L; break;
+  case 'M': returnValue = M; break;
+  case 'm': returnValue = M; break;
+  case 'N': returnValue = N; break;
+  case 'n': returnValue = N; break;
+  case 'O': returnValue = O; break;
+  case 'o': returnValue = O; break;
+  case 'P': returnValue = P; break;
+  case 'p': returnValue = P; break;
+  case 'Q': returnValue = Q; break;
+  case 'q': returnValue = Q; break;
+  case 'R': returnValue = R; break;
+  case 'r': returnValue = R; break;
+  case 'S': returnValue = S; break;
+  case 's': returnValue = S; break;
+  case 'T': returnValue = T; break;
+  case 't': returnValue = T; break;
+  case 'U': returnValue = U; break;
+  case 'u': returnValue = U; break;
+  case 'V': returnValue = V; break;
+  case 'v': returnValue = V; break;
+  case 'W': returnValue = W; break;
+  case 'w': returnValue = W; break;
+  case 'X': returnValue = X; break;
+  case 'x': returnValue = X; break;
+  case 'Y': returnValue = Y; break;
+  case 'y': returnValue = Y; break;
+  case 'Z': returnValue = Z; break;
+  case 'z': returnValue = Z; break;
+  case ' ': returnValue = _; break;
+  case '3': returnValue = B2; break;
+  case '<': returnValue = TEMP; break;
+  case '*': returnValue = FULL; break;
+  case '|': returnValue = LINE; break;  
+  case '_': returnValue = _; break;  
+  case ':': returnValue = COL; break;  
+  case '-': returnValue = DASH; break;  
+  case ')': returnValue = BRA2; break;  
+  case '%': returnValue = SMILE; break;  
+  case '.': returnValue = DOT; break;    
+  case '^': returnValue = COLDOT; break;      
+  }
+  return returnValue;
+}
+//FIM DA COMPILAÇÃO
